@@ -18,6 +18,7 @@ int main(int argc, char* argv[]){
     //Read input parameters
     logfile.write("Reading input file parameters");
     ifstream inputFile("./procrystal.inpt", ios::in);
+    ifstream inputSeedFile("../../output/seed.tmp", ios::in);
     if(!inputFile.good()) logfile.criticalError("Cannot find input file procrystal.inpt");
     string skip,line;
     ++logfile.currIndent;
@@ -72,14 +73,16 @@ int main(int argc, char* argv[]){
     for(int i=0; i<2; ++i) getline(inputFile,skip);
     getline(inputFile,line);
     istringstream(line)>>randomSeed;
-    istringstream(argv[1])>>randomSeed;
+    getline(inputSeedFile,line);
+    istringstream(line)>>randomSeed;
     logfile.write("Random seed: ",randomSeed);
     getline(inputFile,line);
     istringstream(line)>>temperature;
     logfile.write("Temperature: ",temperature);
     getline(inputFile,line);
     istringstream(line)>>samples;
-    istringstream(argv[2])>>samples;
+    getline(inputSeedFile,line);
+    istringstream(line)>>samples;
     logfile.write("Samples: ",samples);
     --logfile.currIndent;
     //Output
@@ -96,7 +99,6 @@ int main(int argc, char* argv[]){
     for(int i=0; i<2; ++i) getline(inputFile,skip);
     getline(inputFile,line);
     istringstream(line)>>outPrefix;
-    istringstream(argv[3])>>outPrefix;
     logfile.write("Output prefix: ",outPrefix);
     getline(inputFile,line);
     istringstream(line)>>writeSamples;
