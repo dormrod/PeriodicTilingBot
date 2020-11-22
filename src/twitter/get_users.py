@@ -18,7 +18,7 @@ def get_users():
     """Mock getting users from Twitter API"""
 
     with open("./mock_users.yml", "r") as f:
-        users = yaml.load(f, Loader=yaml.FullLoader)["users"]
+        users = yaml.load(f, Loader=yaml.FullLoader)
     return users
 
 
@@ -26,8 +26,7 @@ def write_users(users):
     """Write users to temporary file"""
 
     with open("../../output/users.tmp", "w") as f:
-        for user in users:
-            f.write(f"{user}\n")
+        yaml.dump(users, f)
 
 
 def read_seed_parameters():
