@@ -12,15 +12,15 @@ KEYWORD = "keyword"
 
 def main():
 
-    tweet_ids = get_tweet_ids()
-    write_tweet_ids(tweet_ids)
+    users, tweet_ids = get_tweets()
+    write_tweets(users, tweet_ids)
 
     seed_parameters = read_seed_parameters()
     update_seed_parameters(seed_parameters, len(tweet_ids))
 
 
-def get_tweet_ids():
-    """Get Tweet IDs mentioning keyword from Twitter API"""
+def get_tweets():
+    """Get Usernames and Tweet IDs of tweets mentioning keyword from Twitter API"""
 
     # Read bearer token from secrets file
     with open("./secrets.yml", "r") as f:
@@ -40,30 +40,43 @@ def get_tweet_ids():
     uri = "https://api.twitter.com/2/tweets/search/recent"
     headers = {"Authorization": f"Bearer {bearer_token}"}
     query = {"query": f"@{ACCOUNT_NAME}",
+             "expansions" : "author_id",
+             "user.fields" : "username",
              "start_time" : dt_start,
              "end_time" : dt_end}
     response = requests.get(uri, headers=headers, params=query)
 
-    # Get tweet ids from tweets with specified keyword
+    # Get usernames and tweet ids from tweets with specified keyword
+    users = []
     tweet_ids = []
     if response.status_code == 200:
         content = response.json()
         num_results = content["meta"]["result_count"]
         if num_results > 0:
+            # First get dictionary of usernames
+            user_id_to_name = {}
+            for user in content["includes"]["users"]:
+                user_id_to_name[user["id"]] = user["username"]
             for result in content["data"]:
                 if KEYWORD in result["text"].lower():
                     tweet_ids.append(result["id"])
+                    username = user_id_to_name[result["author_id"]]
+                    users.append(username)
 
     # Log response if fails
     else:
         with open(f"../../output/logs/{dt_now.strftime(dt_fmt)}", "w") as f:
             f.write("{} \n {} \n {} ".format(query, response.status_code, response.content))
 
-    return tweet_ids
+    return users, tweet_ids
 
 
-def write_tweet_ids(tweet_ids):
-    """Write Tweet IDs to temporary file"""
+def write_tweets(users, tweet_ids):
+    """Write Usernames and Tweet IDs temporary files"""
+
+    with open("../../output/users.tmp", "w") as f:
+        if len(users)>0:
+            yaml.dump(users, f)
 
     with open("../../output/ids.tmp", "w") as f:
         if len(tweet_ids)>0:
