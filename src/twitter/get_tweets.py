@@ -6,21 +6,22 @@ import sys
 import yaml
 import datetime
 import requests
+import sqlite3
 
 ACCOUNT_NAME = "procrystalbot"
-KEYWORD = "keyword"
+# KEYWORD = "keyword"
 
 def main():
 
-    users, tweet_ids = get_tweets()
-    write_tweets(users, tweet_ids)
-
+    rows_added = get_tweets()
     seed_parameters = read_seed_parameters()
-    update_seed_parameters(seed_parameters, len(tweet_ids))
+    update_seed_parameters(seed_parameters, rows_added)
 
 
 def get_tweets():
-    """Get Usernames and Tweet IDs of tweets mentioning keyword from Twitter API"""
+    """Get Usernames and Tweet IDs of tweets mentioning keyword from Twitter API.
+    Store in local database.
+    """
 
     # Read bearer token from secrets file
     with open("./secrets.yml", "r") as f:
@@ -46,9 +47,15 @@ def get_tweets():
              "end_time" : dt_end}
     response = requests.get(uri, headers=headers, params=query)
 
-    # Get usernames and tweet ids from tweets with specified keyword
-    users = []
-    tweet_ids = []
+    # Make connection to local database
+    connection = sqlite3.connect("../database/procrystaldb.db")
+    cursor = connection.cursor()
+
+    # Get current total number of rows in database
+    cursor.execute("SELECT COUNT(*) FROM Twitter;")
+    initial_rows = cursor.fetchall()[0][0]
+
+    # Get usernames and tweet ids from tweets and save to database
     if response.status_code == 200:
         content = response.json()
         num_results = content["meta"]["result_count"]
@@ -57,34 +64,35 @@ def get_tweets():
             user_id_to_name = {}
             for user in content["includes"]["users"]:
                 user_id_to_name[user["id"]] = user["username"]
+            # Then get tweet id, username and save to database
             for result in content["data"]:
-                if KEYWORD in result["text"].lower():
-                    tweet_ids.append(result["id"])
+                # if KEYWORD in result["text"].lower():
+                    tweet_id = result["id"]
                     username = user_id_to_name[result["author_id"]]
-                    users.append(username)
+                    sql_insert = f"""
+                    INSERT OR IGNORE INTO Twitter (tweet_id, username, reply_sent)
+                    VALUES ('{tweet_id}', '{username}', false);
+                    """
+                    cursor.execute(sql_insert)
 
     # Log response if fails
     else:
         with open(f"../../output/logs/{dt_now.strftime(dt_fmt)}", "w") as f:
             f.write("{} \n {} \n {} ".format(query, response.status_code, response.content))
 
-    return users, tweet_ids
+    # Get final total number of rows in database and therefore number of rows added
+    cursor.execute("SELECT COUNT(*) FROM Twitter;")
+    final_rows = cursor.fetchall()[0][0]
+    rows_added = final_rows - initial_rows
 
+    # Close database connection
+    connection.commit()
+    connection.close()
 
-def write_tweets(users, tweet_ids):
-    """Write Usernames and Tweet IDs temporary files"""
-
-    with open("../../output/users.tmp", "w") as f:
-        if len(users)>0:
-            yaml.dump(users, f)
-
-    with open("../../output/ids.tmp", "w") as f:
-        if len(tweet_ids)>0:
-            yaml.dump(tweet_ids, f)
+    return rows_added
 
 
 def read_seed_parameters():
-    """Read seed parameters from temporary file"""
     """Read seed parameters from temporary file"""
 
     with open("../../output/seed.tmp", "r") as f:

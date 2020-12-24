@@ -84,6 +84,7 @@ int main(int argc, char* argv[]){
     getline(inputSeedFile,line);
     istringstream(line)>>samples;
     logfile.write("Samples: ",samples);
+    if(samples==0) return 0;
     --logfile.currIndent;
     //Output
     logfile.write("Reading output parameters");

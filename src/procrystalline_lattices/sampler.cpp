@@ -122,7 +122,7 @@ void Sampler::sample(Logfile &logfile) {
             }
             if(writeRDFs) procrystal.rdfAnalysis(latticeRDF,dualRDF,rdfDelta);
             if(writeSk) procrystal.skAnalysis(dualSk,multiplicity,skDelta,skMaxN);
-            if(writeSamples) procrystal.writeNetwork(outputPrefix,convergedSamples);
+            if(writeSamples) procrystal.writeNetwork(outputPrefix,randomSeed+convergedSamples);
             if(writeEnvs) environments.addValue(procrystal.getEnvironmentCode());
             logfile.write("Sample "+to_string(attemptedSamples)+" generated in "+to_string(opt[1])+" iterations");
             ++convergedSamples;
