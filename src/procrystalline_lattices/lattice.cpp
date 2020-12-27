@@ -1630,7 +1630,7 @@ void Lattice::writeNetwork(string prefix, int index) {
     //Write node connections and rings
 
     //Set up output file
-    OutputFile sampleFile(prefix+"_sample_"+to_string(index)+".dat");
+    OutputFile sampleFile(prefix+"_sample_"+to_string(index+1)+".dat");
 
     int dim = sqrt(nodes.n);
     int dimSq = nodes.n;

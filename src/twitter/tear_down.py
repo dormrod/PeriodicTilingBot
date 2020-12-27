@@ -48,7 +48,7 @@ Status: offline 🔴
     if response.status_code == 200:
         logging.info("Bio update successful")
     else:
-        logging.error(f"Bio update errored with: {response.content()}")
+        logging.error(f"Bio update errored with: {response.json()}")
 
 
 if __name__ == "__main__":

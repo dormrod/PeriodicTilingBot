@@ -2,14 +2,19 @@
 Script to get @mentions to bot in given time window
 """
 
+
 import sys
+import logging
+from log_handling import setup_logger
 import yaml
 import datetime
 import requests
 import sqlite3
 
+
 ACCOUNT_NAME = "procrystalbot"
 # KEYWORD = "keyword"
+
 
 def main():
 
@@ -38,6 +43,7 @@ def get_tweets():
     dt_start = dt_start.strftime(dt_fmt)
 
     # Make request, checking for mentions in specified time period
+    logging.info("Getting mentions from Twitter")
     uri = "https://api.twitter.com/2/tweets/search/recent"
     headers = {"Authorization": f"Bearer {bearer_token}"}
     query = {"query": f"@{ACCOUNT_NAME}",
@@ -74,16 +80,15 @@ def get_tweets():
                     VALUES ('{tweet_id}', '{username}', false);
                     """
                     cursor.execute(sql_insert)
-
-    # Log response if fails
+        logging.info(f"Mentions fetched: {num_results}")
     else:
-        with open(f"../../output/logs/{dt_now.strftime(dt_fmt)}", "w") as f:
-            f.write("{} \n {} \n {} ".format(query, response.status_code, response.content))
+        logging.error(f"Get mentions errored with: {response.json()}")
 
     # Get final total number of rows in database and therefore number of rows added
     cursor.execute("SELECT COUNT(*) FROM Twitter;")
     final_rows = cursor.fetchall()[0][0]
     rows_added = final_rows - initial_rows
+    logging.info(f"New mentions added: {rows_added}")
 
     # Close database connection
     connection.commit()
@@ -110,4 +115,5 @@ def update_seed_parameters(parameters, samples):
 
 
 if __name__ == "__main__":
+    setup_logger("../../output/logs/get_tweets.log")
     main()
