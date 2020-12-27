@@ -6,6 +6,8 @@ Script to tear down Procrystal bot.
 
 
 import sys
+import logging
+from log_handling import setup_logger
 import yaml
 import requests
 import boto3
@@ -22,6 +24,7 @@ def upload_database():
         access_key = secrets["AWS_ACCESS_KEY"]
         secret_key = secrets["AWS_SECRET_KEY"]
 
+    logging.info("Pushing database to S3")
     s3 = boto3.client('s3', aws_access_key_id=access_key, aws_secret_access_key=secret_key)
     s3.upload_file('../database/procrystaldb.db', 'procrystals', 'procrystaldb.db')
 
@@ -39,10 +42,16 @@ Status: offline 🔴
 🔗 https://journals.aps.org/pre/abstract/10.1103/PhysRevE.102.062308 
     """
 
+    logging.info("Setting bio status to offline")
     uri = f" https://api.twitter.com/1.1/account/update_profile.json?description={bio}"
     response = requests.request("POST", url=uri, auth=post_lattices.generate_auth())
+    if response.status_code == 200:
+        logging.info("Bio update successful")
+    else:
+        logging.error(f"Bio update errored with: {response.content()}")
 
 
 if __name__ == "__main__":
+    setup_logger("../../output/logs/tear_down.log")
     upload_database()
     set_bio_offline()
