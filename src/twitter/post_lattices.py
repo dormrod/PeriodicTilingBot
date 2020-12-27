@@ -92,7 +92,7 @@ def post_lattice(pro_id, user, tweet_id, lattice, auth):
     """Post lattice in response to Tweet"""
 
     logging.info(f"Replying to tweet {tweet_id}")
-    content = f"Here's procrystal %23{pro_id} @{user}!\n\n{lattice}"
+    content = f"Here's your procrystal (%23{pro_id}) @{user}!\n\n{lattice}"
     uri = f"https://api.twitter.com/1.1/statuses/update.json?status={content}&in_reply_to_status_id={tweet_id}"
     response = requests.request("POST", url=uri, auth=auth)
     if response.status_code == 200:

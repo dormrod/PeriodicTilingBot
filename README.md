@@ -12,7 +12,19 @@ Twitter bot to send ascii art 8x8 procrystals to users who @ mention it.
 
 ## Running
 
-TBC
+Set up a crontab to run `scripts/run.sh` every minute i.e.
+
+```bash
+*  *  *  *  *  source /Path/To/.bash_profile; /Path/To/scripts/run.sh
+```
+
+Currently the set up is to check Twitter for the previous 2 minutes.
+This introduces overlap to ensure nothing is missed and duplicate Tweets should not be sent.
+
+To catch up missed Tweets from the past week just run with:
+```bash
+python get_tweets.py 10000 1
+```
 
 ## Script Overview
 
